@@ -51,6 +51,7 @@ class TFRecordDataset(torch.utils.data.IterableDataset):
         return it
 
     def transform_train(self, it):
+        # pcd: [N,3], proposal: [7], gt_box: [7], gt_cls: int
         pcd, proposal, gt_box, gt_cls = load_data(it)
         if gt_cls == 1:
             # only use jitter for vechile
@@ -72,6 +73,7 @@ class TFRecordDataset(torch.utils.data.IterableDataset):
         # move gt box to pred center
         gt_box[:3] -= proposal[:3]
         gt_box[:2] = rotz(-proposal[-1]) @ gt_box[:2]
+        # point_set: [N,9], proposal: [7], gt_box: [7], gt_cls: int
         return point_set.astype(np.float32), proposal.astype(np.float32), gt_cls, gt_box.astype(np.float32)
 
     def transform_test(self, it):

@@ -8,21 +8,23 @@ import sys
 import multiprocessing
 from google.protobuf.descriptor import FieldDescriptor as FD
 import tensorflow.compat.v1 as tf
+
 tf.enable_eager_execution()
 from collections import defaultdict
 from tqdm import tqdm
 
 from waymo_open_dataset.utils import range_image_utils
 from waymo_open_dataset.utils import transform_utils
-from waymo_open_dataset.utils import  frame_utils
+from waymo_open_dataset.utils import frame_utils
 from waymo_open_dataset import dataset_pb2 as open_dataset
 
-
 parser = argparse.ArgumentParser()
-parser.add_argument('--data_folder', type=str, default='../../../datasets/waymo/validation/',
-    help='the location of tfrecords')
-parser.add_argument('--output_folder', type=str, default='../../../datasets/waymo/sot/',
-    help='the location of raw pcs')
+parser.add_argument('--data_folder', type=str,
+                    default='/media/SENSETIME\qiaozhijian/Extreme SSD/datasets/waymo/data_v1_0/tar_files_v1_0/validation_0001',
+                    help='the location of tfrecords')
+parser.add_argument('--output_folder', type=str,
+                    default='/media/SENSETIME\qiaozhijian/Extreme SSD/datasets/waymo/data_v1_0/tar_files_v1_0/validation_0001_output',
+                    help='the location of raw pcs')
 parser.add_argument('--process', type=int, default=1)
 args = parser.parse_args()
 if not os.path.exists(args.output_folder):
@@ -70,10 +72,11 @@ def bbox_dict2array(box_dict):
     ])
     return result
 
+
 def main(data_folder, output_folder, multi_process_token=(0, 1)):
     tf_records = os.listdir(data_folder)
     tf_records = [x for x in tf_records if 'tfrecord' in x]
-    tf_records = sorted(tf_records) 
+    tf_records = sorted(tf_records)
     pc_folder = os.path.join(output_folder, 'pc', 'raw_pc')
     for record_index, tf_record_name in enumerate(tf_records):
         if record_index % multi_process_token[1] != multi_process_token[0]:
@@ -92,7 +95,7 @@ def main(data_folder, output_folder, multi_process_token=(0, 1)):
             context = frame.context.name
             ts = frame.timestamp_micros
             # name = str(context) + '/' + str(ts)
-     
+
             # extract the points
             (range_images, camera_projections, range_image_top_pose) = \
                 frame_utils.parse_range_image_and_camera_projection(frame)
@@ -146,4 +149,3 @@ if __name__ == '__main__':
     pool.close()
     pool.join()
     # main(args.data_folder, args.output_folder)
-

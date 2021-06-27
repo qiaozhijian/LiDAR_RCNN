@@ -21,6 +21,8 @@ class PointNetfeat(nn.Module):
 
 
     def forward(self, x):
+        # input: [B,pts_dim,N]
+        # output: [B,512 * x]
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = self.bn3(self.conv3(x)) # NOTE: should not put a relu
@@ -30,7 +32,7 @@ class PointNetfeat(nn.Module):
 
 
 class PointNet(nn.Module):
-    def __init__(self, pts_dim, x, CLS_NUM):
+    def __init__(self, pts_dim = 9, x = 1, CLS_NUM = 5):
         super(PointNet, self).__init__()
         self.feat = PointNetfeat(pts_dim, x)
         self.fc1 = nn.Linear(512 * x, 256 * x)
@@ -51,21 +53,22 @@ class PointNet(nn.Module):
         self.fc_hr2 = nn.Linear(256, 1, bias=False)
 
     def forward(self, x, pred_bbox):
-        x = self.feat(self.pre_bn(x))
+        # x: [B,pts_dim,N]
+        x = self.feat(self.pre_bn(x)) # [B,512 * x]
         x = F.relu(self.bn1(self.fc1(x)))
-        feat = F.relu(self.bn2(self.fc2(x)))
+        feat = F.relu(self.bn2(self.fc2(x))) # [B,256]
 
         x = F.relu(self.fc_c1(feat))
-        logits = self.fc_c2(x)
+        logits = self.fc_c2(x) # [B,CLS_NUM]
 
         x = F.relu(self.fc_ce1(feat))
-        centers = self.fc_ce2(x)
+        centers = self.fc_ce2(x) # [B,3]
 
         x = F.relu(self.fc_s1(feat))
-        sizes = self.fc_s2(x)
+        sizes = self.fc_s2(x) # [B,3]
 
         x = F.relu(self.fc_hr1(feat))
-        headings = self.fc_hr2(x)
+        headings = self.fc_hr2(x) # [B,1]
 
         return logits, centers, sizes, headings
 
